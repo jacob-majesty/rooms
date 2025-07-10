@@ -1,0 +1,40 @@
+version: "3.8"
+
+services:
+  php:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: rooms-php
+    volumes:
+      - ../:/var/www
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:alpine
+    container_name: rooms-nginx
+    ports:
+      - "84:84"
+    volumes:
+      - ../:/var/www
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - php
+    restart: unless-stopped
+
+  db:
+    image: mysql:8.0
+    container_name: rooms-db
+    environment:
+      MYSQL_ROOT_PASSWORD: rooms
+      MYSQL_DATABASE: rooms
+      MYSQL_USER: rooms
+      MYSQL_PASSWORD: rooms
+    ports:
+      - "3307:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+    restart: unless-stopped
+
+volumes:
+  db_data:
