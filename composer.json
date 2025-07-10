@@ -1,0 +1,20 @@
+{
+    "name": "majesty/rooms",
+    "description": "Sistema de reserva de salas em PHP",
+    "type": "project",
+    "require": {
+        "php": "^8.2",
+        "vlucas/phpdotenv": "^5.5",
+        "ext-pdo": "*",
+        "ext-json": "*"
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\": "app/"
+        }
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "platform-check": false
+    }
+}
