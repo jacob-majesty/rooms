@@ -1,11 +1,36 @@
-FROM php:8.2-fpm
+# Stage 1: Builder - Instala dependências
+FROM composer:2 AS builder
+WORKDIR /app
+COPY composer.json .
+RUN composer install --no-dev --optimize-autoloader --no-interaction
 
-# Instala dependências
-RUN apt-get update && apt-get install -y \
-    git unzip libzip-dev libpng-dev libonig-dev libxml2-dev \
-    && docker-php-ext-install pdo_mysql zip gd mbstring exif pcntl bcmath
-
-# Configura PHP
-COPY php.ini /usr/local/etc/php/conf.d/custom.ini
+# Stage 2: Runtime - Configura o ambiente PHP
+FROM php:8.2-fpm-alpine
 
 WORKDIR /var/www
+
+# Dependências do sistema e extensões PHP
+RUN apk update && apk add \
+    build-base \
+    libzip-dev \
+    zip \
+    unzip \
+    mysql-client \
+    && docker-php-ext-install pdo pdo_mysql zip
+
+# Copia apenas as dependências instaladas (do estágio builder)
+COPY --from=builder /app/vendor /var/www/vendor
+
+COPY --from=builder /app/composer.lock /var/www/composer.lock
+
+# Copia o restante do código
+COPY . .
+
+# Configura usuário não-root (segurança)
+RUN addgroup -g 1000 -S www && \
+    adduser -u 1000 -S www -G www && \
+    chown -R www:www /var/www
+
+USER www
+
+EXPOSE 9000
